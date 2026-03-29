@@ -163,3 +163,7 @@ cloudinary.config(
   api_key = env('CLOUDINARY_API_KEY', default='1234567'),
   api_secret = env('CLOUDINARY_API_SECRET', default='secretkey')
 )
+
+# Fix for Jazzmin compatibility with Django 5.1/5.2 (length_is removed)
+from django.template import base
+base.Library().filter('length_is', lambda v, a: len(v) == int(a) if v is not None else False)

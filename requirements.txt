@@ -1,7 +1,10 @@
-django
+django>=4.2,<5.0
 django-environ
 psycopg2-binary
 django-cloudinary-storage
 cloudinary
 stripe
 django-ckeditor
+Pillow
+gunicorn
+whitenoise
