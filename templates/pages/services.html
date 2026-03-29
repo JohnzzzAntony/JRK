@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- Hero Header matching Image 2 style -->
+    <section class="py-5 mt-5 position-relative overflow-hidden text-center text-white" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://jkrintl.com/wp-content/uploads/2022/12/JKR-Banner-1.jpg'); background-size: cover; background-position: center; min-height: 40vh; display: flex; align-items: center; justify-content: center;">
+        <div class="container py-5">
+            <h1 class="display-3 font-weight-bold" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.5);">Our Services</h1>
+        </div>
+    </section>
+
+    <!-- Services Grid -->
+    <section class="py-5 bg-white">
+        <div class="container py-5">
+            <div class="row">
+                {% for service in services %}
+                <div class="col-md-4 mb-4">
+                    <div class="p-4 border-0 text-center h-100 transition-all transition-shadow" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        {% if service.icon %}
+                        <img src="{{ service.icon.url }}" alt="{{ service.title }}" class="mb-4" height="80">
+                        {% endif %}
+                        <h4 class="mb-3 text-primary font-weight-bold">{{ service.title }}</h4>
+                        <p class="text-muted" style="line-height: 1.6;">{{ service.description }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted h3">Stay tuned for our upcoming healthcare specialized solutions.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .transition-shadow:hover { box-shadow: 0 15px 40px rgba(0,0,0,0.1) !important; transform: translateY(-5px); transition: 0.3s; }
+    </style>
+{% endblock %}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <title>{{ site_settings.meta_title|default:"Medical Equipment Suppliers and Distributor in UAE - JKR" }}</title>
+    <meta name="description" content="{{ site_settings.meta_description }}"/>
+    {% if site_settings.favicon %}
+    <link rel="icon" href="{{ site_settings.favicon.url }}" />
+    {% endif %}
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" />
+    
+    <style>
+        :root {
+            --primary-blue: #114084;
+            --accent-blue: #005CB9;
+            --white: #ffffff;
+            --dark-gray: #4C4D4F;
+            --footer-bg: #1a1a1a;
+        }
+        body { font-family: 'Montserrat', sans-serif; color: #333; }
+        .nav-link { color: #333 !important; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; }
+        .nav-link:hover { color: var(--primary-blue) !important; }
+        .btn-enquiry { background-color: var(--primary-blue); color: #fff; border-radius: 30px; padding: 10px 25px; border: none; font-weight: 600; }
+        .btn-enquiry:hover { color: #fff; background-color: var(--accent-blue); }
+        
+        /* Footer Redesign based on Image 1/2 */
+        .site-footer { background-color: var(--footer-bg); color: #fff; padding: 100px 0 30px; }
+        .footer-heading { font-weight: 700; font-size: 1.1rem; margin-bottom: 25px; color: #fff; }
+        .footer-link { color: #aaa; text-decoration: none; font-size: 0.9rem; transition: 0.3s; display: block; margin-bottom: 15px; }
+        .footer-link:hover { color: #fff; transform: translateX(5px); }
+        
+        .newsletter-card { background: #114084; border-radius: 30px; padding: 40px; border: none; margin-top: -100px; }
+        .newsletter-input { border-radius: 50px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 15px 25px; }
+        .newsletter-input::placeholder { color: #ccc; }
+        .btn-newsletter { border-radius: 50px; padding: 10px 40px; font-weight: 700; background: #0081ff; color: #fff; border: none; }
+    </style>
+    {% block split_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                {% if site_settings.logo %}
+                <img src="{{ site_settings.logo.url }}" alt="JKR Logo" height="50">
+                {% else %}
+                <span class="font-weight-bold" style="color: var(--primary-blue); font-size: 1.5rem;">JKR International</span>
+                {% endif %}
+                <span class="ml-3 small font-weight-bold text-muted d-none d-lg-inline" style="border-left: 1px solid #ddd; padding-left: 15px;">JOY OF MOBILITY</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#mainNav">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'about_us' %}">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'category_index' %}">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'services' %}">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'gallery' %}">Gallery</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'post_list' %}">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact Us</a></li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'enquiry_cart' %}" class="mr-4 position-relative">
+                        <div class="bg-primary text-white p-2 rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        {% if cart_count > 0 %}
+                        <span class="badge badge-pill badge-danger position-absolute" style="top: -5px; right: -5px; border: 2px solid #fff;">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <!-- Footer Redesign (Image 1/2 Request) -->
+    <footer class="site-footer mt-5">
+        <div class="container">
+            <div class="row">
+                <!-- Contact Info Col -->
+                <div class="col-lg-4 mb-5">
+                    {% if site_settings.logo %}
+                    <img src="{{ site_settings.logo.url }}" class="mb-4" height="60" style="filter: brightness(0) invert(1);">
+                    {% endif %}
+                    
+                    <div class="office-box mb-4">
+                        <h6 class="font-weight-bold text-white mb-2">Dubai :</h6>
+                        <p class="small text-white-50">{{ site_settings.dubai_address|default:"Office No. 2, Lootah Building, Marrakeh St, Umm Al Rammool, Rashidiya, Dubai"|linebreaksbr }}</p>
+                    </div>
+                    <div class="office-box">
+                        <h6 class="font-weight-bold text-white mb-2">Abu Dhabi :</h6>
+                        <p class="small text-white-50">{{ site_settings.abudhabi_address|default:"Abu Dhabi Office Info"|linebreaksbr }}</p>
+                    </div>
+                </div>
+
+                <!-- Nav Cols -->
+                <div class="col-6 col-lg-2 mb-5">
+                    <h5 class="footer-heading">Quick Links</h5>
+                    <a href="/" class="footer-link">Home</a>
+                    <a href="{% url 'category_index' %}" class="footer-link">Products</a>
+                    <a href="/services/" class="footer-link">Services</a>
+                </div>
+                <div class="col-6 col-lg-2 mb-5">
+                    <h5 class="footer-heading">Support</h5>
+                    <a href="/about-us/" class="footer-link">About</a>
+                    <a href="/contact/" class="footer-link">Contact</a>
+                </div>
+                <div class="col-lg-1 d-none d-lg-block">
+                    <h5 class="footer-heading">Legal</h5>
+                    <a href="/privacy/" class="footer-link">Privacy Policy</a>
+                </div>
+
+                <!-- Newsletter Col -->
+                <div class="col-lg-3 mb-5 pl-lg-4">
+                    <div class="newsletter-card">
+                        <h4 class="font-weight-bold text-white mb-3">Subscribe to our Newsletter</h4>
+                        <form action="{% url 'subscribe' %}" method="POST">
+                            {% csrf_token %}
+                            <div class="form-group mb-3">
+                                <input type="email" name="email" class="form-control newsletter-input w-100" placeholder="Email Address" required>
+                            </div>
+                            <button type="submit" class="btn btn-newsletter w-100">Submit</button>
+                        </form>
+                        <div class="d-flex justify-content-center mt-4">
+                            {% if site_settings.facebook %}<a href="{{ site_settings.facebook }}" class="text-white mx-3"><i class="fab fa-facebook-f fa-lg"></i></a>{% endif %}
+                            {% if site_settings.instagram %}<a href="{{ site_settings.instagram }}" class="text-white mx-3"><i class="fab fa-instagram fa-lg"></i></a>{% endif %}
+                            {% if site_settings.linkedin %}<a href="{{ site_settings.linkedin }}" class="text-white mx-3"><i class="fab fa-linkedin-in fa-lg"></i></a>{% endif %}
+                            {% if site_settings.twitter %}<a href="{{ site_settings.twitter }}" class="text-white mx-3"><i class="fab fa-twitter fa-lg"></i></a>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-top border-secondary pt-4 text-center">
+                <p class="small text-white-50">© {% now "Y" %} {{ site_settings.site_name }}. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

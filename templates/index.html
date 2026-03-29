@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- Hero Slider -->
+    <section class="slider-section position-relative overflow-hidden">
+        <div class="swiper home-slider">
+            <div class="swiper-wrapper">
+                {% for slider in sliders %}
+                <div class="swiper-slide vh-100 position-relative">
+                    {% if slider.video %}
+                    <video class="video-bg " playsinline loop muted autoplay style="width: 100%; height: 100vh; object-fit: cover;">
+                        <source src="{{ slider.video.url }}" type="video/mp4">
+                    </video>
+                    {% elif slider.image %}
+                    <img src="{{ slider.image.url }}" alt="{{ slider.title }}" class="img-fluid vh-100 w-100" style="object-fit: cover;">
+                    {% endif %}
+                    <div class="slider-content container py-5" style="z-index: 10; position: absolute; bottom: 100px; left: 0; right: 0;">
+                        <div class="row">
+                            <div class="col-md-8 text-white">
+                                <h1 class="display-3 font-weight-bold" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.5);">{{ slider.title }}</h1>
+                                <p class="lead h3 mb-4">{{ slider.subtitle }}</p>
+                                <a href="{{ slider.button_link }}" class="btn btn-primary btn-lg px-5 py-3 shadow-lg" style="border-radius: 50px; background-color: var(--accent-blue); border:none;">
+                                    {{ slider.button_text }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="swiper-slide bg-primary vh-100 d-flex align-items-center justify-content-center">
+                    <h1 class="text-white">Welcome to JKR International - Please add Sliders in Admin</h1>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="py-5 bg-light" id="products">
+        <div class="container text-center pt-5">
+            <h2 class="section-title">Discover our <span style="color:var(--accent-blue)">Products & Services</span> here!</h2>
+            <p class="mb-5 lead">Leading Medical Equipment Suppliers and Distributor in UAE.</p>
+        </div>
+        <div class="container-fluid pb-5">
+            <div class="swiper category-slider">
+                <div class="swiper-wrapper">
+                    {% for category in categories %}
+                    <div class="swiper-slide">
+                        <div class="card border-0 shadow-sm mx-2 p-3 text-center h-100" style="border-radius: 20px;">
+                            <a href="/products/category/{{ category.slug }}" class="text-decoration-none">
+                                <img src="{% if category.image %}{{ category.image.url }}{% else %}https://via.placeholder.com/300{% endif %}" class="card-img-top mb-3 rounded shadow-sm" style="height: 200px; object-fit: cover;">
+                                <h5 class="text-dark">{{ category.name }}</h5>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="pt-4 text-center">
+                    <div class="swiper-button-next d-none d-md-block"></div>
+                    <div class="swiper-button-prev d-none d-md-block"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explore Latest Products Section (Image 1 Request) -->
+    <section class="py-5 bg-white">
+        <div class="container py-5">
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 class="section-title mb-2">Explore <span class="text-primary">Latest Products</span></h2>
+                    <p class="lead text-muted">Discover our newest medical innovations and technology.</p>
+                </div>
+                <a href="{% url 'category_index' %}" class="btn btn-link text-primary font-weight-bold mb-2">View All Products <i class="fas fa-chevron-right ml-2"></i></a>
+            </div>
+            <div class="row">
+                {% for product in latest_products %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm transition-all overflow-hidden" style="border-radius: 20px;">
+                        <a href="{% url 'product_detail' slug=product.slug %}" class="text-decoration-none text-dark">
+                            <div class="position-relative">
+                                <img src="{% if product.image %}{{ product.image.url }}{% else %}https://via.placeholder.com/300{% endif %}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                                {% if product.sale_price %}
+                                <span class="badge badge-danger position-absolute p-2" style="top: 15px; right: 15px; border-radius: 8px;">Sale</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body p-4">
+                                <h5 class="font-weight-bold mb-3" style="min-height: 3rem;">{{ product.name }}</h5>
+                                <div class="d-flex align-items-center justify-content-between mt-3 pt-3 border-top">
+                                    <div class="price">
+                                        {% if product.sale_price %}
+                                        <span class="h5 font-weight-bold text-primary mb-0">AED {{ product.sale_price }}</span>
+                                        <del class="small text-muted ml-2">AED {{ product.regular_price }}</del>
+                                        {% else %}
+                                        <span class="h5 font-weight-bold text-primary mb-0">AED {{ product.regular_price }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-primary"><i class="fas fa-plus-circle fa-lg"></i></span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Stay tuned for our latest medical products.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    {% if about_us %}
+    <section class="py-5" id="about">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <h3 class="text-secondary mb-3">About Us</h3>
+                    <h2 class="section-title mb-4">{{ about_us.heading }}</h2>
+                    <div class="text-muted mb-4 lead">
+                        {{ about_us.content|safe }}
+                    </div>
+                    <a href="/about-us/" class="btn btn-outline-primary px-4 py-2" style="border-radius: 30px;">Read More</a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="swiper about-slider mt-4">
+                        <div class="swiper-wrapper">
+                            {% for video in about_us.videos.all %}
+                            <div class="swiper-slide">
+                                <div class="position-relative overflow-hidden rounded-lg shadow" style="border-radius: 20px;">
+                                    <img src="{{ video.thumbnail.url }}" class="img-fluid w-100" style="height: 350px; object-fit: cover;">
+                                    <div class="position-absolute d-flex align-items-center justify-content-center" style="top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3);">
+                                        <a href="{{ video.video_url }}" class="text-white" data-fancybox onclick="event.preventDefault(); window.open('{{ video.video_url }}','_blank');">
+                                            <i class="fas fa-play-circle fa-5x"></i>
+                                        </a>
+                                    </div>
+                                    {% if video.title %}
+                                    <div class="position-absolute p-3 text-white w-100" style="bottom:0; background: linear-gradient(transparent, rgba(0,0,0,0.7))">
+                                        <h5 class="m-0">{{ video.title }}</h5>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Milestones/Counters -->
+    <section class="py-5" style="background-color: var(--primary-blue);">
+        <div class="container py-5 text-center text-white">
+            <div class="row">
+                {% for counter in counters %}
+                <div class="col-md-3 mb-4">
+                    <h2 class="display-4 font-weight-bold counter-value">{{ counter.value }}</h2>
+                    <p class="h5">{{ counter.title }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Partners / We Deal With -->
+    <section class="py-5 bg-light border-top border-bottom">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-lg-3 mb-4 mb-lg-0 pr-lg-5">
+                    <h2 class="font-weight-bold text-dark mb-3" style="font-size: 2.5rem;">We Deal with,</h2>
+                    <p class="text-muted" style="font-size: 1.1rem; line-height: 1.6;">
+                        100+ partnerships we've made ensure the quality of products we distribute
+                    </p>
+                </div>
+                <div class="col-lg-9">
+                    <div class="swiper partner-slider">
+                        <div class="swiper-wrapper align-items-center">
+                            {% for partner in partners %}
+                            <div class="swiper-slide text-center">
+                                {% if partner.website_url %}
+                                <a href="{{ partner.website_url }}" target="_blank" class="d-block w-100 h-100 p-2 text-decoration-none">
+                                {% else %}
+                                <div class="w-100 h-100 p-2">
+                                {% endif %}
+                                    <img src="{{ partner.logo.url }}" alt="{{ partner.name }}" class="img-fluid" style="max-height: 80px; object-fit: contain; filter: grayscale(100%); transition: all 0.3s ease;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(100%)'">
+                                {% if partner.website_url %}
+                                </a>
+                                {% else %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section (Image 1 Request) -->
+    <section class="py-5 bg-white overflow-hidden">
+        <div class="container py-5 text-center">
+            <h4 class="text-primary font-weight-bold mb-3">TESTIMONIALS</h4>
+            <h2 class="section-title mb-5 pb-3">Read what our clients have to share!</h2>
+            
+            <div class="swiper testimonial-slider px-4">
+                <div class="swiper-wrapper">
+                    {% for t in testimonials %}
+                    <div class="swiper-slide">
+                        <div class="card border-0 p-5 shadow mx-auto" style="border-radius: 40px; max-width: 800px; background: #fdfdfd;">
+                            <div class="mb-4">
+                                <i class="fas fa-quote-left fa-3x text-light"></i>
+                            </div>
+                            <p class="lead text-dark font-italic mb-5" style="line-height: 1.8;">"{{ t.content }}"</p>
+                            <div class="d-flex align-items-center justify-content-center">
+                                {% if t.image %}
+                                <img src="{{ t.image.url }}" class="rounded-circle mr-3" style="width: 70px; height: 70px; object-fit: cover;">
+                                {% endif %}
+                                <div class="text-left">
+                                    <h5 class="font-weight-bold mb-0">{{ t.client_name }}</h5>
+                                    <small class="text-muted text-uppercase">{{ t.position }}</small>
+                                    <div class="text-warning mt-1">
+                                        {% for i in "12345"|make_list %}{% if forloop.counter <= t.rating %}<i class="fas fa-star"></i>{% endif %}{% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="swiper-slide">
+                        <p class="text-muted">No testimonials added yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-pagination mt-5 position-relative"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Clients Section (Image 1 Request) -->
+    <section class="py-5 bg-light">
+        <div class="container py-5">
+            <h2 class="section-title text-center mb-5 pb-4">Our Clients</h2>
+            
+            <!-- Public Sector -->
+            <div class="mb-5 pb-5 border-bottom">
+                <div class="row align-items-center">
+                    <div class="col-lg-3 mb-4 mb-lg-0">
+                        <h4 class="font-weight-bold mb-2">Public Sector</h4>
+                        <div style="width: 50px; height: 3px; background: var(--primary-blue);"></div>
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="row">
+                            {% for client in public_clients %}
+                            <div class="col-md-2 col-4 mb-4">
+                                <div class="bg-white p-3 rounded-lg shadow-sm text-center">
+                                    <img src="{{ client.logo.url }}" alt="{{ client.name }}" class="img-fluid" style="max-height: 60px; object-fit: contain;">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Private Sector -->
+            <div>
+                <div class="row align-items-center">
+                    <div class="col-lg-3 mb-4 mb-lg-0">
+                        <h4 class="font-weight-bold mb-2">Private Sector</h4>
+                        <div style="width: 50px; height: 3px; background: var(--primary-blue);"></div>
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="row">
+                            {% for client in private_clients %}
+                            <div class="col-md-2 col-4 mb-4">
+                                <div class="bg-white p-3 rounded-lg shadow-sm text-center">
+                                    <img src="{{ client.logo.url }}" alt="{{ client.name }}" class="img-fluid" style="max-height: 60px; object-fit: contain;">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instagram Section (Image 1 Request) -->
+    <section class="py-5 bg-white">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <h4 class="text-primary font-weight-bold mb-1">GO SOCIAL WITH US</h4>
+                <h2 class="font-weight-bold mb-4">Follow our Instagram <span class="text-primary">{{ site_settings.instagram_handle|default:"@jkrinternational" }}</span></h2>
+            </div>
+            <div class="row no-gutters">
+                {% for post in social_posts %}
+                <div class="col-lg-2 col-md-4 col-6 p-1">
+                    <a href="{{ post.link|default:'#' }}" target="_blank" class="d-block overflow-hidden position-relative social-hover-box">
+                        <img src="{{ post.image.url }}" class="img-fluid w-100" style="height: 200px; object-fit: cover;">
+                        <div class="social-overlay d-flex align-items-center justify-content-center">
+                            <i class="fab fa-instagram fa-2x text-white"></i>
+                        </div>
+                    </a>
+                </div>
+                {% empty %}
+                {% for i in "123456"|make_list %}
+                <div class="col-lg-2 col-md-4 col-6 p-1">
+                    <img src="https://via.placeholder.com/400x400?text=Instagram" class="img-fluid" style="border-radius: 4px;">
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Queries / Contact CTA (Image 1 Request) -->
+    <section class="py-0">
+        <div class="container">
+            <div class="card border-0 shadow-lg px-5 py-5 text-white position-relative" style="background: var(--primary-blue); border-radius: 30px; margin-bottom: -50px; z-index: 5;">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <p class="h5 font-weight-bold mb-2">Any Queries, Feedback</p>
+                        <h2 class="display-4 font-weight-bold">We would love to hear from you</h2>
+                    </div>
+                    <div class="col-md-4 text-md-right mt-4 mt-md-0">
+                        <a href="/contact/" class="btn btn-light btn-lg px-5 py-3 font-weight-bold" style="border-radius: 50px; color: var(--primary-blue);">Contact us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .social-hover-box .social-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 64, 132, 0.7);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .social-hover-box:hover .social-overlay { opacity: 1; }
+        .section-title { font-weight: 800; font-size: 2.5rem; color: #333; }
+        .transition-all:hover { transform: translateY(-10px); }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        new Swiper(".home-slider", {
+            loop: true,
+            autoplay: { delay: 5000 },
+            pagination: { el: ".swiper-pagination", clickable: true },
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" }
+        });
+
+        new Swiper(".category-slider", {
+            slidesPerView: 2,
+            spaceBetween: 10,
+            loop: true,
+            autoplay: { delay: 2000 },
+            breakpoints: {
+                640: { slidesPerView: 3, spaceBetween: 20 },
+                1024: { slidesPerView: 4, spaceBetween: 30 }
+            },
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" }
+        });
+
+        new Swiper(".testimonial-slider", {
+            loop: true,
+            autoplay: { delay: 4000 },
+            pagination: { el: ".swiper-pagination", clickable: true },
+            slidesPerView: 1
+        });
+
+        var pCount = parseInt("{{ partners.count|default:0 }}") || 0;
+        new Swiper(".partner-slider", {
+            slidesPerView: 2,
+            spaceBetween: 30,
+            loop: pCount > 2,
+            autoplay: { delay: 3000, disableOnInteraction: false },
+            breakpoints: {
+                640: { slidesPerView: 3, spaceBetween: 40, loop: pCount > 3 },
+                1024: { slidesPerView: 5, spaceBetween: 50, loop: pCount > 5 },
+            }
+        });
+    });
+</script>
+{% endblock %}
