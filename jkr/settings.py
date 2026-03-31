@@ -47,7 +47,6 @@ INSTALLED_APPS = [
 
     # Custom apps
     'core',
-    'accounts',
     'products',
     'orders',
     'sliders',
@@ -125,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Dubai'
 
 USE_I18N = True
 
@@ -185,6 +184,16 @@ cloudinary.config(
   api_secret = env('CLOUDINARY_API_SECRET', default='secretkey')
 )
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+# ── Notification and Site Configuration ───────────────────────────────────────
+SITE_URL = env('SITE_URL', default='http://localhost:8000')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=env('EMAIL_HOST_USER', default='notifications@jkrinternational.com'))
+CURRENCY = env('CURRENCY', default='AED')
 
+# Email Delivery (SMTP)
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com') 
+EMAIL_PORT = env('EMAIL_PORT', cast=int, default=587)
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', cast=bool, default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')

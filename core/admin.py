@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SiteSettings, NavMenuItem, Testimonial, Client, SocialPost
+from .models import SiteSettings, Testimonial, Client, SocialPost
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
@@ -20,12 +20,14 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Social Networking', {
             'fields': (('facebook', 'instagram'), ('linkedin', 'twitter', 'instagram_handle'))
         }),
+        ('Notification Channels', {
+            'fields': (
+                'enable_email_notifications', 
+                'enable_sms_notifications', 
+                'enable_whatsapp_notifications'
+            )
+        }),
     )
-
-@admin.register(NavMenuItem)
-class NavMenuItemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'link', 'order', 'is_active')
-    list_editable = ('order', 'is_active')
 
 @admin.register(Testimonial)
 class TestimonialAdmin(admin.ModelAdmin):

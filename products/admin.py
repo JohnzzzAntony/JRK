@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Category, Product, ProductSKU, ProductImage, Attribute, AttributeOption, ProductAttributeValue
+from .models import Category, Product, ProductSKU, ProductImage, Attribute, AttributeOption, ProductAttributeValue, Offer, Collection
 
 
 # ─── Inlines ─────────────────────────────────────────────────────────────────
@@ -117,8 +117,9 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'parent', 'slug')
-    list_filter = ('parent',)
+    list_display = ('name', 'parent', 'show_on_homepage', 'homepage_order', 'slug')
+    list_editable = ('show_on_homepage', 'homepage_order')
+    list_filter = ('parent', 'show_on_homepage')
     filter_horizontal = ('attributes',)
     readonly_fields = ('slug', 'cat_seo_std_heading', 'cat_seo_en_heading', 'cat_seo_ar_heading')
 
@@ -150,6 +151,9 @@ class CategoryAdmin(admin.ModelAdmin):
         ('Category Details', {
             'fields': ('parent', 'name', 'slug'),
         }),
+        ('Homepage Configuration', {
+            'fields': (('show_on_homepage', 'homepage_order'),),
+        }),
         ('Image', {
             'fields': (('image', 'image_url'),),
         }),
@@ -167,3 +171,21 @@ class CategoryAdmin(admin.ModelAdmin):
             ),
         }),
     )
+
+# ─── Offers ──────────────────────────────────────────────────────────────────
+
+@admin.register(Offer)
+class OfferAdmin(admin.ModelAdmin):
+    list_display = ('name', 'offer_type', 'discount_value', 'start_date', 'end_date', 'is_active')
+    list_filter = ('offer_type', 'is_active', 'start_date')
+    search_fields = ('name',)
+    filter_horizontal = ('skus',)
+
+# ─── Collections ─────────────────────────────────────────────────────────────
+
+@admin.register(Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'display_order', 'slug')
+    list_editable = ('is_active', 'display_order')
+    filter_horizontal = ('skus',)
+    readonly_fields = ('slug',)

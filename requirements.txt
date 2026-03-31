@@ -5,3 +5,6 @@ django-cloudinary-storage
 cloudinary
 stripe
 django-ckeditor
+django-jazzmin
+whitenoise
+Pillow

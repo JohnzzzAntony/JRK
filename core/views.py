@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from products.models import Category, Product
+from products.models import Category, Product, Collection
 from sliders.models import HeroSlider
 from pages.models import AboutUs, MissionVision, Service, Counter, WhyUsCard, Partner, GalleryItem
 from .models import Testimonial, Client, SocialPost
@@ -7,12 +7,8 @@ from .models import Testimonial, Client, SocialPost
 def home(request):
     """Homepage aggregation view."""
     sliders = HeroSlider.objects.filter(is_active=True).order_by('order')
-    # Homepage categories: Show parents only if multiple exist; otherwise show all to prevent empty browsing.
-    parents = Category.objects.filter(parent__isnull=True)
-    if parents.count() <= 1:
-        categories = Category.objects.all()
-    else:
-        categories = parents
+    # Homepage categories: Filtered by 'Show on Homepage' toggle and custom sort order.
+    categories = Category.objects.filter(show_on_homepage=True).order_by('homepage_order')
     about_us = AboutUs.objects.first()
     
     mission = MissionVision.objects.filter(section_type='mission').first()
@@ -36,9 +32,13 @@ def home(request):
         skus__shipping_status='available'
     ).distinct().order_by('-id')[:4]
 
+    # Homepage Collections: Filter active ones and prefetch related SKUs for efficient rendering.
+    collections = Collection.objects.filter(is_active=True).prefetch_related('skus__product')
+
     context = {
         'sliders': sliders,
         'categories': categories,
+        'collections': collections,
         'about_us': about_us,
         'mission': mission,
         'vision': vision,

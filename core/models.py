@@ -29,6 +29,11 @@ class SiteSettings(models.Model):
     linkedin = models.URLField(blank=True)
     twitter = models.URLField(blank=True)
     instagram_handle = models.CharField(max_length=100, default="@jkrinternational", blank=True)
+    
+    # ── Notification Settings ───────────────────────────────────────────────
+    enable_email_notifications    = models.BooleanField(default=True, verbose_name="Enable Email Notifications")
+    enable_sms_notifications      = models.BooleanField(default=False, verbose_name="Enable SMS Notifications")
+    enable_whatsapp_notifications = models.BooleanField(default=False, verbose_name="Enable WhatsApp Notifications")
 
     def get_logo_url(self):
         if self.logo_url: return self.logo_url
@@ -38,14 +43,6 @@ class SiteSettings(models.Model):
     class Meta:
         verbose_name = "Site Settings"
         verbose_name_plural = "Site Settings"
-
-class NavMenuItem(models.Model):
-    title = models.CharField(max_length=100)
-    link = models.CharField(max_length=255, default="/")
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    class Meta: ordering = ['order']
-    def __str__(self): return self.title
 
 class Testimonial(models.Model):
     client_name = models.CharField(max_length=100)

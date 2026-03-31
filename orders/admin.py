@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
 from django.db.models import Q
-from .models import CustomerOrder, CustomerOrderItem
+from django.conf import settings
+from .models import CustomerOrder, CustomerOrderItem, OrderStatusHistory
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -31,12 +32,13 @@ def _badge(label, color):
 # ─── Status colour maps ───────────────────────────────────────────────────────
 
 ORDER_STATUS_COLORS = {
-    'pending':    '#ffc107',
-    'confirmed':  '#17a2b8',
-    'processing': '#007bff',
-    'shipped':    '#6f42c1',
-    'delivered':  '#28a745',
-    'cancelled':  '#dc3545',
+    'pending':            '#ffc107',
+    'packaging':          '#fd7e14',
+    'ready_for_shipment': '#007bff',
+    'shipped':            '#6f42c1',
+    'delivered':          '#28a745',
+    'return_to_origin':    '#e83e8c',
+    'refund':             '#dc3545',
 }
 
 PAYMENT_STATUS_COLORS = {
@@ -65,6 +67,66 @@ class CustomerOrderItemInline(admin.TabularInline):
         return True
 
 
+class OrderStatusHistoryInline(admin.TabularInline):
+    model = OrderStatusHistory
+    extra = 0
+    readonly_fields = ('status_badge', 'changed_at')
+    can_delete = False
+    
+    def status_badge(self, obj):
+        color = ORDER_STATUS_COLORS.get(obj.status, '#888')
+        # We need a proper way to get the display name.
+        # Since 'status' is a field in OrderStatusHistory, we can use the main model's choices.
+        # But here 'status' is just a CharField.
+        # Let's map it back or just use the badge helper.
+        label = dict(CustomerOrder.ORDER_STATUS_CHOICES).get(obj.status, obj.status)
+        return _badge(label, color)
+    status_badge.short_description = "Status"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+# ─── Custom Filters ───────────────────────────────────────────────────────────
+
+from django.utils import timezone
+from datetime import timedelta
+
+class CreatedAtRangeFilter(admin.SimpleListFilter):
+    title = 'date ordered'
+    parameter_name = 'created_at_custom'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('today', 'Today'),
+            ('yesterday', 'Yesterday'),
+            ('7_days', 'Past 7 days'),
+            ('30_days', 'Past 30 days'),
+            ('this_month', 'This Month'),
+            ('custom', 'Custom Range'),
+        )
+
+    def queryset(self, request, queryset):
+        val = self.value()
+        if not val:
+            return queryset
+        
+        now = timezone.now().date()
+        if val == 'today':
+            return queryset.filter(created_at__date=now)
+        if val == 'yesterday':
+            return queryset.filter(created_at__date=now - timedelta(days=1))
+        if val == '7_days':
+            return queryset.filter(created_at__date__gte=now - timedelta(days=7))
+        if val == '30_days':
+            return queryset.filter(created_at__date__gte=now - timedelta(days=30))
+        if val == 'this_month':
+            return queryset.filter(created_at__year=now.year, created_at__month=now.month)
+        
+        # 'custom' is handled via JS and created_at__gte/lte in URL
+        return queryset
+
+
 # ─── Customer Order ────────────────────────────────────────────────────────────
 
 @admin.register(CustomerOrder)
@@ -77,21 +139,29 @@ class CustomerOrderAdmin(admin.ModelAdmin):
         'phone',
         'payment_method_badge', 
         'payment_status_badge',
-        'order_status_badge', 
+        'status',             # This becomes "Order Status" due to short_description later
         'items_count', 
         'total_display',
         'created_at',
     )
-    list_filter   = ('status', 'payment_method', 'payment_status', 'country', 'created_at')
+    list_editable = ('status',) # Added list editable status
+    list_filter   = (
+        'status', 
+        'payment_method', 
+        'payment_status', 
+        'country', 
+        CreatedAtRangeFilter, # Using custom range filter
+    )
     search_fields = ('first_name', 'last_name', 'email', 'phone', 'id')
     readonly_fields = (
         'order_number', 'created_at', 'updated_at',
         'order_summary_heading', 'billing_heading',
         'payment_heading', 'management_heading',
         'items_total_display',
-        'customer_order_tag',  # ← Added detailed badge for detail page
+        'customer_order_tag', 
+        'resend_notification_button',
     )
-    inlines = [CustomerOrderItemInline]
+    inlines = [CustomerOrderItemInline, OrderStatusHistoryInline]
 
     # ── Customer Tag helpers ─────────────────────────────────────────────────
 
@@ -141,7 +211,7 @@ class CustomerOrderAdmin(admin.ModelAdmin):
     items_count.short_description = "Items"
 
     def total_display(self, obj):
-        return mark_safe(f'<strong>{obj.total_amount} AED</strong>')
+        return mark_safe(f'<strong>{obj.total_amount} {settings.CURRENCY}</strong>')
     total_display.short_description = "Total"
 
     # ── Detail page readonly section headings (styled separators) ───────────
@@ -166,13 +236,44 @@ class CustomerOrderAdmin(admin.ModelAdmin):
         return mark_safe('<p style="margin:16px 0 4px;font-weight:700;font-size:13px;color:#1a7a4a;border-bottom:2px solid #1a7a4a;padding-bottom:4px;">⚙️ Order Management</p>')
     management_heading.short_description = ''
 
+    def resend_notification_button(self, obj):
+        if not obj.pk: return "-"
+        from django.urls import reverse
+        url = reverse('admin:resend-notification', args=[obj.pk])
+        return mark_safe(
+            f'<div style="margin-top:10px;">'
+            f'<a class="button" href="{url}" style="background:#1d6fa4;color:#FFF;padding:8px 20px;border-radius:4px;text-decoration:none;font-weight:700;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);">'
+            f'📨 Resend Multi-Channel Notification</a>'
+            f'<p style="font-size:11px;color:#888;margin-top:5px;">This will trigger Email (and optional SMS/WhatsApp) based on global settings.</p>'
+            f'</div>'
+        )
+    resend_notification_button.short_description = "Manual Notification Control"
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:order_id>/resend-notification/', 
+                 self.admin_site.admin_view(self.resend_notification), 
+                 name='resend-notification'),
+        ]
+        return custom_urls + urls
+
+    def resend_notification(self, request, order_id):
+        from .notifications import send_customer_notification
+        from django.shortcuts import get_object_or_404, redirect
+        order = get_object_or_404(CustomerOrder, pk=order_id)
+        send_customer_notification(order, is_automated=False)
+        self.message_user(request, f"Notifications have been successfully resent for Order #JKR-{order_id:05d}.")
+        return redirect('admin:orders_customerorder_change', order_id)
+
     def items_total_display(self, obj):
         total = sum(i.total_price for i in obj.items.all())
         rows = "".join(
             f'<tr><td style="padding:4px 10px;">{i.product_name}</td>'
             f'<td style="padding:4px 10px;text-align:center;">{i.quantity}</td>'
-            f'<td style="padding:4px 10px;text-align:right;">{i.unit_price} AED</td>'
-            f'<td style="padding:4px 10px;text-align:right;font-weight:700;">{i.total_price} AED</td></tr>'
+            f'<td style="padding:4px 10px;text-align:right;">{i.unit_price} {settings.CURRENCY}</td>'
+            f'<td style="padding:4px 10px;text-align:right;font-weight:700;">{i.total_price} {settings.CURRENCY}</td></tr>'
             for i in obj.items.all()
         )
         return mark_safe(
@@ -184,7 +285,7 @@ class CustomerOrderAdmin(admin.ModelAdmin):
             f'<th style="padding:6px 10px;text-align:right;">Total</th></tr></thead>'
             f'<tbody>{rows}</tbody>'
             f'<tfoot><tr><td colspan="3" style="padding:8px 10px;font-weight:700;text-align:right;">Grand Total</td>'
-            f'<td style="padding:8px 10px;font-weight:700;text-align:right;color:#2271b1;">{total} AED</td></tr></tfoot>'
+            f'<td style="padding:8px 10px;font-weight:700;text-align:right;color:#2271b1;">{total} {settings.CURRENCY}</td></tr></tfoot>'
             f'</table>'
         )
     items_total_display.short_description = "Items Summary"
@@ -219,6 +320,7 @@ class CustomerOrderAdmin(admin.ModelAdmin):
             'fields': (
                 'management_heading',
                 ('status', 'total_amount'),
+                'resend_notification_button',
                 'admin_notes',
                 ('created_at', 'updated_at'),
             ),
@@ -230,3 +332,4 @@ class CustomerOrderAdmin(admin.ModelAdmin):
 
     class Media:
         css = {'all': ('admin/css/custom_order.css',)}
+        js = ('admin/js/custom_order.js',)

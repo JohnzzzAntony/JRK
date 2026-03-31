@@ -29,6 +29,10 @@ class Category(models.Model):
     )
     image_url = models.URLField(blank=True, null=True, help_text="Alternative: Direct link to an externally hosted image.")
     attributes = models.ManyToManyField(Attribute, blank=True, related_name='categories')
+    
+    # Homepage Config
+    show_on_homepage = models.BooleanField(default=False, verbose_name="Show on Homepage")
+    homepage_order   = models.PositiveIntegerField(default=0, verbose_name="Homepage Display Order")
 
     # SEO — Standard
     meta_title = models.CharField(max_length=255, blank=True, verbose_name="SEO Title Tag")
@@ -107,6 +111,26 @@ class Product(models.Model):
     meta_description_ar = models.TextField(blank=True, verbose_name="SEO Meta Description (AR)")
     meta_keywords_ar = models.CharField(max_length=255, blank=True, verbose_name="SEO Meta Keywords (AR)")
     url_alias_ar = models.CharField(max_length=255, blank=True, verbose_name="SEO URL Alias (AR)")
+    
+    def get_best_price_info(self):
+        """
+        Scans all related SKUs for active offers and returns the best overall pricing dictionary.
+        """
+        all_skus = self.skus.all()
+        if not all_skus:
+            reg = self.regular_price or 0
+            sale = self.sale_price or reg
+            return {
+                'has_offer': sale < reg,
+                'final_price': sale,
+                'regular_price': reg,
+                'discount_display': f"{self.get_discount_percentage()}% OFF" if sale < reg else None
+            }
+        
+        # Get all SKU price infos and sort by lowest final price
+        sku_infos = [sku.get_price_info() for sku in all_skus]
+        best_info = min(sku_infos, key=lambda x: x['final_price'])
+        return best_info
 
     def get_discount_amount(self):
         reg = self.regular_price or 0
@@ -148,6 +172,8 @@ class ProductImage(models.Model):
         if self.image: return self.image.url
         return "https://via.placeholder.com/600x400"
 
+from django.utils import timezone
+
 class ProductSKU(models.Model):
     product = models.ForeignKey(Product, related_name='skus', on_delete=models.CASCADE)
     title = models.CharField(max_length=255, blank=True, help_text="e.g. Small, Blue, standard, etc.")
@@ -169,6 +195,54 @@ class ProductSKU(models.Model):
     free_shipping = models.BooleanField(default=False)
     additional_shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Extra shipping fee in AED")
 
+    def get_active_offer(self):
+        now = timezone.now()
+        # Returns the first active offer (highest priority in the future if needed)
+        return self.offers.filter(
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now
+        ).first()
+
+    def get_price_info(self):
+        """
+        Returns a dictionary of price-related fields: 
+        final_price, regular_price, has_offer, offer_id, etc.
+        """
+        offer = self.get_active_offer()
+        # Default to product's prices
+        regular_price = self.product.regular_price or 0
+        current_sale_price = self.product.sale_price or regular_price
+        
+        if not offer:
+            return {
+                'has_offer': False,
+                'offer': None,
+                'regular_price': regular_price,
+                'final_price': current_sale_price,
+                'discount_display': None
+            }
+        
+        # Apply offer on top of CURRENT sale_price if it's set, else regular
+        base_to_discount = current_sale_price
+        final_price = base_to_discount
+
+        if offer.offer_type == 'percentage':
+            final_price = base_to_discount * (1 - (offer.discount_value / 100))
+        elif offer.offer_type == 'fixed':
+            final_price = base_to_discount - offer.discount_value
+        elif offer.offer_type == 'final':
+            final_price = offer.discount_value
+        # Note: BOGO is typically handled in cart logic, but we track it here for badge display.
+        
+        return {
+            'has_offer': True,
+            'offer': offer,
+            'regular_price': regular_price,
+            'final_price': max(0, final_price),
+            'discount_display': f"{int(offer.discount_value)}% OFF" if offer.offer_type == 'percentage' else "OFFER"
+        }
+
     def save(self, *args, **kwargs):
         if not self.sku_id:
             import random, string
@@ -184,3 +258,39 @@ class ProductSKU(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.sku_id}"
+
+class Offer(models.Model):
+    OFFER_TYPES = (
+        ('percentage', 'Percentage Discount (%)'),
+        ('fixed', 'Fixed Discount Entry (AED)'),
+        ('final', 'Final Set Price (AED)'),
+        ('bogo', 'Buy One Get One (BOGO)'),
+    )
+    name = models.CharField(max_length=100)
+    offer_type = models.CharField(max_length=20, choices=OFFER_TYPES, default='percentage')
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, help_text="Percentage or AED amount")
+    skus = models.ManyToManyField(ProductSKU, related_name='offers', blank=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.discount_value}{'%' if self.offer_type == 'percentage' else ' AED'})"
+
+class Collection(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    banner = models.ImageField(upload_to='collections/', null=True, blank=True, help_text="Homepage Banner for this collection.")
+    skus = models.ManyToManyField(ProductSKU, related_name='collections', blank=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if not self.slug: self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['display_order']

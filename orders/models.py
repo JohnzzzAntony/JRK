@@ -84,12 +84,13 @@ class CustomerOrder(models.Model):
     )
 
     ORDER_STATUS_CHOICES = (
-        ('pending',    'Pending'),
-        ('confirmed',  'Confirmed'),
-        ('processing', 'Processing'),
-        ('shipped',    'Shipped'),
-        ('delivered',  'Delivered'),
-        ('cancelled',  'Cancelled'),
+        ('pending',           'Pending'),
+        ('packaging',         'Packaging'),
+        ('ready_for_shipment', 'Ready for shipment'),
+        ('shipped',           'Shipped'),
+        ('delivered',         'Delivered'),
+        ('return_to_origin',   'Return to origin'),
+        ('refund',            'Refund'),
     )
 
     # ── Billing / Customer ──────────────────────────────────────────────────
@@ -108,7 +109,7 @@ class CustomerOrder(models.Model):
     payment_status  = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
 
     # ── Order Management ─────────────────────────────────────────────────────
-    status          = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
+    status          = models.CharField(max_length=30, choices=ORDER_STATUS_CHOICES, default='pending', verbose_name="Order Status")
     total_amount    = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     admin_notes     = models.TextField(blank=True, verbose_name="Internal Admin Notes")
     created_at      = models.DateTimeField(auto_now_add=True)
@@ -118,6 +119,10 @@ class CustomerOrder(models.Model):
         ordering = ['-created_at']
         verbose_name = "Customer Order"
         verbose_name_plural = "Customer Orders"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__status = self.status
 
     def __str__(self):
         return f"Order #{self.pk} — {self.first_name} {self.last_name}"
@@ -131,6 +136,36 @@ class CustomerOrder(models.Model):
         self.total_amount = total
         self.save(update_fields=['total_amount'])
         return total
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        status_changed = not is_new and self.status != self.__status
+        
+        super().save(*args, **kwargs)
+        
+        if is_new or status_changed:
+            # 1. Log history
+            OrderStatusHistory.objects.create(order=self, status=self.status)
+            
+            # 2. Trigger notifications
+            from .notifications import send_customer_notification
+            send_customer_notification(self)
+            
+            self.__status = self.status
+
+
+class OrderStatusHistory(models.Model):
+    order = models.ForeignKey(CustomerOrder, related_name='history', on_delete=models.CASCADE)
+    status = models.CharField(max_length=30)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-changed_at']
+        verbose_name = "Order Status History"
+        verbose_name_plural = "Order Status Histories"
+
+    def __str__(self):
+        return f"{self.order} — {self.status} at {self.changed_at}"
 
 
 class CustomerOrderItem(models.Model):

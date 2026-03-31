@@ -2,71 +2,71 @@
 {% load static %}
 
 {% block content %}
-<!-- Hero Banner -->
-<section class="py-5 position-relative text-center text-white" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://jkrintl.com/wp-content/uploads/2022/12/JKR-Banner-2.jpg'); background-size: cover; background-position: center; min-height: 30vh; display: flex; align-items: center; justify-content: center;">
+<section class="py-5 mt-5 bg-light">
     <div class="container py-4">
-        <h1 class="display-4 font-weight-bold mt-5" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.5);">Shopping Cart</h1>
-    </div>
-</section>
 
-<section class="py-5 bg-light">
-    <div class="container py-4">
+        <!-- Page Title -->
+        <div class="d-flex align-items-center mb-5">
+            <h2 class="font-weight-bold mb-0" style="color:var(--primary-blue);">
+                <i class="fas fa-shopping-cart mr-3"></i>Your Cart
+            </h2>
+            {% if cart_items %}
+            <span class="badge badge-primary ml-3 px-3 py-2" style="border-radius:20px;font-size:1rem;">
+                {{ cart_items|length }} item{{ cart_items|length|pluralize }}
+            </span>
+            {% endif %}
+        </div>
 
         <div class="row">
             <!-- Cart Items -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:20px;">
+                <div class="card border-0 shadow-sm rounded-lg mb-4">
                     <div class="card-body p-4">
                         <div class="table-responsive">
-                            <table class="table align-middle text-center mb-0 border-0">
-                                <thead class="bg-light border-0">
+                            <table class="table align-middle mb-0">
+                                <thead class="thead-light">
                                     <tr>
-                                        <th scope="col" class="text-left border-0 py-3 pl-4" style="min-width:250px;">Product</th>
-                                        <th scope="col" class="border-0 py-3">Price</th>
-                                        <th scope="col" class="border-0 py-3">Quantity</th>
-                                        <th scope="col" class="border-0 py-3">Total</th>
-                                        <th scope="col" class="border-0 py-3 pr-4">Remove</th>
+                                        <th class="border-0">Product</th>
+                                        <th class="border-0 text-center">Price</th>
+                                        <th class="border-0 text-center">Qty</th>
+                                        <th class="border-0 text-center">Total</th>
+                                        <th class="border-0 text-center">Remove</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for item in cart_items %}
-                                    <tr class="bg-white" style="border-radius:12px;">
-                                        <td class="text-left d-flex align-items-center border-0 py-4 pl-4">
-                                            <img src="{{ item.product.get_image_url }}" alt="{{ item.product.name }}"
-                                                 style="width:70px;height:70px;object-fit:contain;border:1px solid #eee;border-radius:10px;" class="mr-3 shadow-sm">
-                                            <div>
-                                                <a href="{% url 'product_detail' slug=item.product.slug %}"
-                                                   class="font-weight-bold text-dark text-decoration-none h6 mb-0 d-block">
-                                                    {{ item.product.name }}
-                                                </a>
-                                                <small class="text-muted">{{ item.product.category.name }}</small>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ item.product.get_image_url }}" alt="{{ item.product.name }}"
+                                                     style="width:65px;height:65px;object-fit:contain;border-radius:8px;border:1px solid #eee;" class="mr-3">
+                                                <div>
+                                                    <a href="{% url 'product_detail' slug=item.product.slug %}"
+                                                       class="font-weight-bold text-dark text-decoration-none" style="font-size:0.95rem;">
+                                                        {{ item.product.name }}
+                                                    </a>
+                                                    <div class="small text-muted">{{ item.product.category.name }}</div>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td class="align-middle border-0 font-weight-bold" style="color:var(--primary-blue);">
-                                            {{ item.price }} AED
+                                        <td class="text-center font-weight-bold">{{ item.price }} AED</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-secondary px-3 py-2">{{ item.quantity }}</span>
                                         </td>
-                                        <td class="align-middle border-0">
-                                            <span class="badge badge-light px-3 py-2 font-weight-bold border" style="font-size:0.95rem;">
-                                                {{ item.quantity }}
-                                            </span>
-                                        </td>
-                                        <td class="align-middle border-0 font-weight-bold text-dark">
-                                            {{ item.total_item }} AED
-                                        </td>
-                                        <td class="align-middle border-0 pr-4">
+                                        <td class="text-center font-weight-bold text-primary">{{ item.total_item }} AED</td>
+                                        <td class="text-center">
                                             <a href="{% url 'remove_from_cart' product_id=item.product.id %}"
                                                class="btn btn-sm btn-outline-danger" style="border-radius:50%;width:34px;height:34px;padding:0;line-height:32px;">
-                                                <i class="fa fa-times"></i>
+                                                <i class="fas fa-times"></i>
                                             </a>
                                         </td>
                                     </tr>
-                                    <tr style="height:10px;"></tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="5" class="text-center py-5 border-0">
-                                            <i class="fas fa-shopping-cart fa-3x mb-3 d-block text-secondary"></i>
-                                            <h5 class="text-muted mb-3">Your cart is empty.</h5>
-                                            <a href="{% url 'category_index' %}" class="btn btn-primary px-4 py-2" style="border-radius:30px;">
+                                        <td colspan="5" class="text-center py-5">
+                                            <i class="fas fa-shopping-cart fa-3x mb-3 text-secondary d-block"></i>
+                                            <h5 class="text-muted">Your cart is empty.</h5>
+                                            <a href="{% url 'category_index' %}" class="btn btn-primary mt-3" style="border-radius:30px;">
                                                 Browse Products
                                             </a>
                                         </td>
@@ -84,73 +84,74 @@
 
             <!-- Order Summary -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-lg sticky-top" style="border-radius:20px;top:100px;">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="font-weight-bold text-primary mb-0">
-                            <i class="fas fa-receipt mr-2"></i>Order Summary
-                        </h5>
+                <div class="card border-0 shadow-sm rounded-lg">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <h5 class="font-weight-bold">Order Summary</h5>
                     </div>
-                    <div class="card-body px-4 py-3">
+                    <div class="card-body p-4">
+                        {% with subtotal=0 %}
                         {% for item in cart_items %}
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">{{ item.product.name|truncatechars:26 }} × {{ item.quantity }}</span>
+                            <span class="text-muted small">{{ item.product.name|truncatechars:28 }}</span>
                             <span class="small font-weight-bold">{{ item.total_item }} AED</span>
                         </div>
                         {% endfor %}
-
-                        <hr class="my-3">
-
+                        {% endwith %}
+                        <hr>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Shipping</span>
-                            <span class="text-success small font-weight-bold">Calculated at checkout</span>
+                            <span class="font-weight-medium">Shipping</span>
+                            <span class="text-success font-weight-bold">Calculated at checkout</span>
                         </div>
-
-                        <hr class="my-3">
-
-                        <div class="d-flex justify-content-between">
-                            <h6 class="font-weight-bold mb-0">Total</h6>
-                            <h6 class="font-weight-bold mb-0 text-primary" id="cart-total">
-                                {% if cart_items %}—{% else %}0.00{% endif %} AED
-                            </h6>
+                        <hr>
+                        <div class="d-flex justify-content-between mt-3">
+                            <h5 class="font-weight-bold">Total</h5>
+                            <h5 class="font-weight-bold text-primary">
+                                {% with total=0 %}
+                                {% for item in cart_items %}
+                                    {# JS will compute this below #}
+                                {% endfor %}
+                                <span id="cart-total">— AED</span>
+                                {% endwith %}
+                            </h5>
                         </div>
                     </div>
-                    <div class="card-footer bg-white border-0 px-4 pb-4">
+                    <div class="card-footer bg-white border-0 p-4 pt-0">
                         {% if cart_items %}
                         <a href="{% url 'checkout_billing' %}"
-                           class="btn btn-primary btn-block py-3 font-weight-bold shadow"
+                           class="btn btn-primary btn-block py-3 shadow font-weight-bold"
                            style="border-radius:30px;background-color:var(--accent-blue);font-size:1.05rem;">
                             <i class="fas fa-lock mr-2"></i>Proceed to Checkout
                         </a>
                         {% else %}
-                        <button class="btn btn-secondary btn-block py-3 disabled" style="border-radius:30px;" disabled>
-                            Your Cart is Empty
+                        <button class="btn btn-secondary btn-block py-3" style="border-radius:30px;" disabled>
+                            Cart is Empty
                         </button>
                         {% endif %}
                         <div class="text-center mt-3">
                             <small class="text-muted">
-                                <i class="fas fa-shield-alt mr-1"></i>Secure &amp; encrypted checkout
+                                <i class="fas fa-lock mr-1"></i>Secure & encrypted checkout
                             </small>
                         </div>
-                        <div class="d-flex justify-content-center align-items-center mt-3" style="gap:10px;opacity:0.5;">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" height="18" alt="Visa">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" height="22" alt="Mastercard">
-                            <span style="font-weight:900;font-size:0.9rem;color:#3eb98f;">tabby</span>
-                            <span style="font-weight:900;font-size:0.9rem;color:#ff6b35;">tamara</span>
+                        <!-- Payment icons -->
+                        <div class="d-flex justify-content-center mt-3" style="gap:8px;opacity:0.6;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" height="20" alt="Visa">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" height="20" alt="Mastercard">
+                            <img src="https://www.tabby.ai/img/favicon/tabby-mark.svg" height="20" alt="Tabby">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    var totals = [{% for item in cart_items %}{{ item.total_item }},{% endfor %}];
-    var sum = totals.reduce(function (a, b) { return a + b; }, 0);
-    var el = document.getElementById('cart-total');
-    if (el && totals.length) el.textContent = sum.toFixed(2) + ' AED';
+// Compute total client-side from data attributes
+document.addEventListener('DOMContentLoaded', function() {
+    const totals = {% if cart_items %}[{% for item in cart_items %}{{ item.total_item }},{% endfor %}]{% else %}[]{% endif %};
+    const sum = totals.reduce(function(a, b){ return a + b; }, 0);
+    const el = document.getElementById('cart-total');
+    if(el) el.textContent = sum.toFixed(2) + ' AED';
 });
 </script>
 {% endblock %}
