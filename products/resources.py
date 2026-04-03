@@ -29,7 +29,9 @@ class ProductResource(resources.ModelResource):
         fields = (
             'id', 'category', 'name', 'slug', 'image_url', 'features', 
             'overview', 'technical_info', 'regular_price', 'sale_price', 'is_active',
-            'meta_title', 'meta_description', 'meta_keywords'
+            'meta_title', 'meta_description', 'meta_keywords',
+            'sku_title', 'sku_id', 'sku_quantity', 'sku_shipping_status', 
+            'sku_weight', 'gallery_image_urls', 'category_image_url'
         )
 
     def before_import_row(self, row, **kwargs):
